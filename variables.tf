@@ -26,12 +26,22 @@ variable "private_key_path" {
   default = "~/.ssh/gcloud_id_rsa"
 }
 
-variable "install_script_src_path" {
+variable "web_install_script_src_path" {
   description = "Path to install script within this repository"
-  default = "scripts/install.sh"
+  default = "scripts/web-install.sh"
 }
 
-variable "install_script_dest_path" {
+variable "web_install_script_dest_path" {
   description = "Path to put the install script on each destination resource"
-  default = "/tmp/install.sh"
+  default = "/tmp/web-install.sh"
+}
+
+variable "jenkins_install_script_src_path" {
+  description = "Path to install script within this repository"
+  default = "scripts/jenkins-install.sh"
+}
+
+variable "jenkins_install_script_dest_path" {
+  description = "Path to put the install script on each destination resource"
+  default = "/tmp/jenkins-install.sh"
 }

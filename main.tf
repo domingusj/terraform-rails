@@ -27,6 +27,7 @@ resource "google_compute_forwarding_rule" "default" {
   port_range = "80"
 }
 
+# WWW nodes
 resource "google_compute_instance" "www" {
   count = 3
 
@@ -51,8 +52,8 @@ resource "google_compute_instance" "www" {
   }
 
   provisioner "file" {
-    source = "${var.install_script_src_path}"
-    destination = "${var.install_script_dest_path}"
+    source = "${var.web_install_script_src_path}"
+    destination = "${var.web_install_script_dest_path}"
     connection {
       type = "ssh"
       user = "root"
@@ -69,8 +70,8 @@ resource "google_compute_instance" "www" {
       agent = false
     }
     inline = [
-      "chmod +x ${var.install_script_dest_path}",
-      "sudo ${var.install_script_dest_path} ${count.index}"
+      "chmod +x ${var.web_install_script_dest_path}",
+      "sudo ${var.web_install_script_dest_path} ${count.index}"
     ]
   }
 
@@ -79,7 +80,58 @@ resource "google_compute_instance" "www" {
   }
 }
 
-resource "google_compute_firewall" "default" {
+# Jenkins nodes
+resource "google_compute_instance" "jenkins" {
+  name = "tf-jenkins-1"
+  machine_type = "f1-micro"
+  zone = "${var.region_zone}"
+  tags = ["jenkins-node"]
+
+  disk {
+    image = "ubuntu-os-cloud/ubuntu-1404-trusty-v20160602"
+  }
+
+  network_interface {
+    network = "default"
+    access_config {
+      # Ephemeral
+    }
+  }
+
+  metadata {
+    ssh-keys = "root:${file("${var.public_key_path}")}"
+  }
+
+  provisioner "file" {
+    source = "${var.jenkins_install_script_src_path}"
+    destination = "${var.jenkins_install_script_dest_path}"
+    connection {
+      type = "ssh"
+      user = "root"
+      private_key = "${file("${var.private_key_path}")}"
+      agent = false
+    }
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type = "ssh"
+      user = "root"
+      private_key = "${file("${var.private_key_path}")}"
+      agent = false
+    }
+    inline = [
+      "chmod +x ${var.jenkins_install_script_dest_path}",
+      "sudo ${var.jenkins_install_script_dest_path}"
+    ]
+  }
+
+  service_account {
+    scopes = ["https://www.googleapis.com/auth/compute.readonly"]
+  }
+}
+
+resource "google_compute_firewall" "web" {
   name = "tf-www-firewall"
   network = "default"
 
@@ -90,4 +142,17 @@ resource "google_compute_firewall" "default" {
 
   source_ranges = ["0.0.0.0/0"]
   target_tags = ["www-node"]
+}
+
+resource "google_compute_firewall" "jenkins" {
+  name = "tf-jenkins-firewall"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports = ["8080"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["jenkins-node"]
 }
