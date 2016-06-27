@@ -83,7 +83,7 @@ resource "google_compute_instance" "www" {
 # Jenkins nodes
 resource "google_compute_instance" "jenkins" {
   name = "tf-jenkins-1"
-  machine_type = "f1-micro"
+  machine_type = "n1-standard-4"
   zone = "${var.region_zone}"
   tags = ["jenkins-node"]
 
