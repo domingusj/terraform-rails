@@ -4,5 +4,5 @@ RUN mkdir /myapp
 WORKDIR /myapp
 ADD ./rails/Gemfile /myapp/Gemfile
 ADD ./rails/Gemfile.lock /myapp/Gemfile.lock
-RUN bundle install
+RUN bundle install --jobs 4
 ADD ./rails/. /myapp
